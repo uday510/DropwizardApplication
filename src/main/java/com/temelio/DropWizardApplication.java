@@ -3,12 +3,12 @@ package com.temelio;
 import com.codahale.metrics.health.HealthCheck;
 import com.temelio.core.models.Nonprofit;
 import com.temelio.health.TemplateHealthCheck;
-import com.temelio.resources.GreetingsResource;
-import com.temelio.resources.HelloWorldResource;
 import com.temelio.resources.NonprofitResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
@@ -26,8 +26,14 @@ public class DropWizardApplication extends Application<DropWizardConfiguration> 
     }
 
     @Override
-    public void initialize(final Bootstrap<DropWizardConfiguration> bootstrap) {
-        // TODO: application initialization
+    public void initialize(Bootstrap<DropWizardConfiguration> bootstrap) {
+        // Enable Swagger
+        bootstrap.addBundle(new SwaggerBundle<DropWizardConfiguration>() {
+            @Override
+            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(DropWizardConfiguration configuration) {
+                return configuration.getSwaggerBundleConfiguration();
+            }
+        });
     }
 
     @Override
@@ -35,7 +41,6 @@ public class DropWizardApplication extends Application<DropWizardConfiguration> 
                     final Environment environment) {
         // TODO: implement application
 
-        environment.jersey().register(new HelloWorldResource());
         environment.jersey().register(new NonprofitResource());
 
         // getting-started: HelloWorldApplication#run->TemplateHealthCheck

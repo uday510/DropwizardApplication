@@ -112,10 +112,13 @@
     <dependencies>
       <dependency>
         <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-dependencies</artifactId>
-        <version>${dropwizard.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <artifactId>dropwizard-core</artifactId>
+        <version>2.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.federecio.dropwizard</groupId>
+        <artifactId>dropwizard-swagger</artifactId>
+        <version>2.0.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
