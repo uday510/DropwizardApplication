@@ -1,7 +1,5 @@
 package com.temelio;
 
-import com.codahale.metrics.health.HealthCheck;
-import com.temelio.core.models.Nonprofit;
 import com.temelio.health.TemplateHealthCheck;
 import com.temelio.resources.NonprofitResource;
 import io.dropwizard.Application;
@@ -9,10 +7,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import org.checkerframework.checker.units.qual.A;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DropWizardApplication extends Application<DropWizardConfiguration> {
 
