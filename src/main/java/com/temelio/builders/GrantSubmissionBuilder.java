@@ -14,11 +14,11 @@ public class GrantSubmissionBuilder {
             grantSubmission.setGrantName(userInput.getGrantName());
         }
 
-        if (userInput.getRequestedAmount() != 0) {
+        if (userInput.getRequestedAmount() != null) {
             grantSubmission.setRequestedAmount(userInput.getRequestedAmount());
         }
 
-        if (userInput.getAwardedAmount() != 0) {
+        if (userInput.getAwardedAmount() != null) {
             grantSubmission.setAwardedAmount(userInput.getAwardedAmount());
         }
 

@@ -1,14 +1,22 @@
 package com.temelio.core.models;
 
-// GrantSubmission.java
 import java.util.ArrayList;
 import java.util.List;
 
 public class GrantSubmission {
     private int nonprofitId;
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     private String grantName;
-    private Double requestedAmount;
-    private Double awardedAmount;
+    private String requestedAmount;
+    private String awardedAmount;
     private GrantType grantType;
     private List<String> tags;
     private Duration duration;
@@ -29,19 +37,19 @@ public class GrantSubmission {
         this.grantName = grantName;
     }
 
-    public double getRequestedAmount() {
+    public String getRequestedAmount() {
         return requestedAmount;
     }
 
-    public void setRequestedAmount(double requestedAmount) {
+    public void setRequestedAmount(String requestedAmount) {
         this.requestedAmount = requestedAmount;
     }
 
-    public double getAwardedAmount() {
+    public String getAwardedAmount() {
         return awardedAmount;
     }
 
-    public void setAwardedAmount(double awardedAmount) {
+    public void setAwardedAmount(String awardedAmount) {
         this.awardedAmount = awardedAmount;
     }
 

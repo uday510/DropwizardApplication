@@ -27,7 +27,7 @@ public class NonprofitResource {
     }
 
     @POST
-    public Nonprofit createNonProfit(Nonprofit nonProfit){
+    public int createNonProfit(Nonprofit nonProfit){
         if (nonProfit == null) {
             throw new BadRequestException("Nonprofit cannot be null");
         }
@@ -42,8 +42,9 @@ public class NonprofitResource {
                 throw new BadRequestException("Non profit same legal name already exists");
             }
         }
+        nonProfit.setId(nonprofits.size());
         nonprofits.add(nonProfit);
-        return nonProfit;
+        return nonProfit.getId();
     }
 
     @GET
@@ -79,10 +80,9 @@ public class NonprofitResource {
         return nonprofits.get(id).getGrantSubmissions();
     }
 
-
     @POST
     @Path("/{id}/submissions")
-    public GrantSubmission createSubmission(@PathParam("id") int id, GrantSubmission grantSubmission) {
+    public int createSubmission(@PathParam("id") int id, GrantSubmission grantSubmission) {
         if (grantSubmission == null) {
             throw new BadRequestException("Grant submission cannot be null");
         }
@@ -102,9 +102,11 @@ public class NonprofitResource {
         }
 
         grantSubmission.setNonprofitId(id);
+        grantSubmission.setId(nonprofits.get(id).getGrantSubmissions().size());
+
         this.nonprofits.get(id).getGrantSubmissions().add(grantSubmission);
 
-        return grantSubmission;
+        return grantSubmission.getId();
     }
 
     @GET

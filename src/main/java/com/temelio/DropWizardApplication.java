@@ -44,10 +44,8 @@ public class DropWizardApplication extends Application<DropWizardConfiguration> 
         environment.jersey().register(new HelloWorldResource());
         environment.jersey().register(new NonprofitResource());
 
-        // getting-started: HelloWorldApplication#run->TemplateHealthCheck
         TemplateHealthCheck healthCheck = new TemplateHealthCheck(configuration.getTemplate());
         environment.healthChecks().register("template", healthCheck);
-        // getting-started: HelloWorldApplication#run->TemplateHealthCheck
 
     }
 }

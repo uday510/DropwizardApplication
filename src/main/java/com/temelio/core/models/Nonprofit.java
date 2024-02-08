@@ -8,6 +8,16 @@ public class Nonprofit {
     private String ein;
     private String mission;
     private Address address;
+    int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public List<GrantSubmission> grantSubmissions;
     public Nonprofit() {
         this.grantSubmissions = new ArrayList<>();
