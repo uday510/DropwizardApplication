@@ -11,132 +11,204 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
+/**
+ * REST resource for managing nonprofits.
+ */
 @Api()
 @Path("/nonprofits")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class NonprofitResource {
     private final List<Nonprofit> nonprofits;
+
     public NonprofitResource() {
         this.nonprofits = new ArrayList<>();
     }
+
+    /**
+     * Get a list of all nonprofits.
+     *
+     * @return List of Nonprofit objects.
+     */
     @GET
     public List<Nonprofit> getNonProfits() {
         return nonprofits;
     }
 
-    @POST
-    public int createNonProfit(Nonprofit nonProfit){
-        if (nonProfit == null) {
-            throw new BadRequestException("Nonprofit cannot be null");
-        }
-
-        if (nonProfit.getLegalName() == null || nonProfit.getLegalName().isEmpty()) {
-            throw new BadRequestException("Legal name cannot be null or empty");
-        }
-
-        // check for same legal name , assuming legal name is unique
-        for (Nonprofit currNonProfit : nonprofits) {
-            if (Objects.equals(currNonProfit.getLegalName(), nonProfit.getLegalName())) {
-                throw new BadRequestException("Non profit same legal name already exists");
-            }
-        }
-        nonProfit.setId(nonprofits.size());
-        nonprofits.add(nonProfit);
-        return nonProfit.getId();
-    }
-
+    /**
+     * Get a nonprofit by its ID.
+     *
+     * @param id ID of the nonprofit to retrieve.
+     * @return Nonprofit object.
+     */
     @GET
     @Path("/{id}")
     public Nonprofit getNonprofitById(@PathParam("id") int id) {
-        if (id < 0 || id >= nonprofits.size())
-            throw new NotFoundException("invalid nonprofit Id");
+        Nonprofit nonprofit = nonprofits.stream()
+                .filter(np -> Objects.equals(np.getId(), id))
+                .findFirst()
+                .orElse(null);
 
-        return nonprofits.get(id);
+        if (nonprofit == null) {
+            throw new NotFoundException("Invalid nonprofit Id");
+        }
+
+        return nonprofit;
     }
 
+    /**
+     * Create a new nonprofit.
+     *
+     * @param incomingNonprofit Nonprofit object to create.
+     * @return Nonprofit object.
+     */
+    @POST
+    public Nonprofit createNonprofit(Nonprofit incomingNonprofit) {
+        // Generate a random int ID for the nonprofit should be positive
+        int id = generateRandomId();
+
+        // check if the nonprofit already exists
+        if (nonprofits.stream().anyMatch(np -> Objects.equals(np.getEin(), incomingNonprofit.getEin()))) {
+            throw new BadRequestException("Nonprofit with EIN already exists");
+        }
+
+       Nonprofit createdNonprofit = new NonprofitBuilder()
+                .withId(id)
+                .withLegalName(incomingNonprofit.getLegalName())
+                .withEin(incomingNonprofit.getEin())
+                .withMission(incomingNonprofit.getMission())
+                .withAddress(incomingNonprofit.getAddress())
+                .build();
+
+        nonprofits.add(createdNonprofit);
+        return createdNonprofit;
+    }
+
+    /**
+     * Update a nonprofit by its ID.
+     */
     @PUT
     @Path("/{id}")
-    public Nonprofit updateNonProfit(@PathParam("id") int id, Nonprofit updatedNonprofit) {
-       getNonprofitById(id);
+    public Nonprofit updateNonprofit(@PathParam("id") int nonprofitId, Nonprofit incomingNonprofit) {
+        // Check if the nonprofit already exists
+        Nonprofit existingNonprofit = getNonprofitById(nonprofitId);
 
-       Nonprofit updated = new NonprofitBuilder(nonprofits.get(id))
-               .updateFieldsFromUserInput(updatedNonprofit)
-               .build();
+        Nonprofit updatedNonprofit = new NonprofitBuilder(existingNonprofit)
+                .updateFieldsFromUserInput(incomingNonprofit)
+                .build();
 
-       nonprofits.set(id, updated);
+        // Update the nonprofit in the list
+        nonprofits.set(nonprofits.indexOf(existingNonprofit), updatedNonprofit);
 
-       return updated;
+        return updatedNonprofit;
     }
 
-
+    /**
+     * Generate a random int ID for the nonprofit should be positive
+     *
+     * @return int ID
+     */
+    /**
+     * Get a list of grant submissions for a nonprofit.
+     *
+     * @param id ID of the nonprofit.
+     * @return List of GrantSubmission objects.
+     */
     @GET
     @Path("/{id}/submissions")
     public List<GrantSubmission> getSubmissions(@PathParam("id") int id) {
-        // check for valid nonprofitId
-        getNonprofitById(id);
-
-        return nonprofits.get(id).getGrantSubmissions();
+        Nonprofit nonprofit = getNonprofitById(id);
+        return nonprofit.getGrantSubmissions();
     }
 
+    /**
+     * Create a new grant submission for a nonprofit.
+     *
+     * @param id               ID of the nonprofit.
+     * @param incomingGrantSubmission  GrantSubmission object to be created.
+     * @return ID of the created grant submission.
+     */
     @POST
     @Path("/{id}/submissions")
-    public int createSubmission(@PathParam("id") int id, GrantSubmission grantSubmission) {
-        if (grantSubmission == null) {
-            throw new BadRequestException("Grant submission cannot be null");
-        }
+    public GrantSubmission createSubmission(@PathParam("id") int id, GrantSubmission incomingGrantSubmission) {
+        Nonprofit nonprofit = getNonprofitById(id);
 
-        if (grantSubmission.getGrantName() == null || grantSubmission.getGrantName().isEmpty()) {
-            throw new BadRequestException("Grant submission name cannot be null or empty");
-        }
-        // check for valid nonprofitId
-        getNonprofitById(id);
-
-        // check for same name , assuming  name is unique
-        for (GrantSubmission currGrantSubmission  : nonprofits.get(id).getGrantSubmissions()) {
-
-            if (Objects.equals(currGrantSubmission.getGrantName(), grantSubmission.getGrantName())) {
-                throw new BadRequestException("Grant submission with same name already exists");
+        // check for the same name, assuming name is unique
+        for (GrantSubmission currGrantSubmission : nonprofit.getGrantSubmissions()) {
+            if (Objects.equals(currGrantSubmission, incomingGrantSubmission.getGrantName())) {
+                throw new BadRequestException("Grant submission with the same name already exists");
             }
         }
 
-        grantSubmission.setNonprofitId(id);
-        grantSubmission.setId(nonprofits.get(id).getGrantSubmissions().size());
+        incomingGrantSubmission.setId(generateRandomId()); // Generate a random UUID as the ID
+        incomingGrantSubmission.setNonprofitId(id);
 
-        this.nonprofits.get(id).getGrantSubmissions().add(grantSubmission);
+        GrantSubmission updatedGrantSubmission = new GrantSubmissionBuilder(incomingGrantSubmission)
+                .withId(incomingGrantSubmission.getId())
+                .withNonprofitId(incomingGrantSubmission.getNonprofitId())
+                .withGrantName(incomingGrantSubmission.getGrantName())
+                .withRequestedAmount(incomingGrantSubmission.getRequestedAmount())
+                .withAwardedAmount(incomingGrantSubmission.getAwardedAmount())
+                .withGrantType(incomingGrantSubmission.getGrantType())
+                .withTags(incomingGrantSubmission.getTags())
+                .withDuration(incomingGrantSubmission.getDuration())
+                .build();
 
-        return grantSubmission.getId();
+        // set the grant submission
+        nonprofit.getGrantSubmissions().add(updatedGrantSubmission);
+
+        return updatedGrantSubmission;
     }
-
+    /**
+     * Get a grant submission by nonprofit ID and submission ID.
+     *
+     * @param nonprofitId ID of the nonprofit.
+     * @param submissionId ID of the submission.
+     * @return GrantSubmission object.
+     */
     @GET
     @Path("/{nonprofitId}/submissions/{submissionId}")
     public GrantSubmission getSubmissionByNonprofitId(@PathParam("nonprofitId") int nonprofitId, @PathParam("submissionId") int submissionId) {
-        // check for valid nonprofitId
-        checkForValid(nonprofitId, submissionId);
-
-        GrantSubmission grantSubmission = nonprofits.get(nonprofitId).getGrantSubmissions().get(submissionId);
+        Nonprofit nonprofit = getNonprofitById(nonprofitId);
+        GrantSubmission grantSubmission = getGrantSubmissionById(nonprofit, submissionId);
 
         return grantSubmission;
     }
 
+    /**
+     * Update a grant submission by nonprofit ID and submission ID.
+     *
+     * @param nonprofitId      ID of the nonprofit.
+     * @param submissionId     ID of the submission.
+     * @param updatedSubmission Updated GrantSubmission object.
+     * @return Updated GrantSubmission object.
+     */
     @PUT
     @Path("/{nonprofitId}/submissions/{submissionId}")
     public GrantSubmission updateSubmissionByNonprofitId(@PathParam("nonprofitId") int nonprofitId, @PathParam("submissionId") int submissionId, GrantSubmission updatedSubmission) {
-        // check for valid nonprofitId
-       checkForValid(nonprofitId, submissionId);
+        Nonprofit nonprofit = getNonprofitById(nonprofitId);
+        GrantSubmission grantSubmission = getGrantSubmissionById(nonprofit, submissionId);
 
-        GrantSubmission updated = new GrantSubmissionBuilder(nonprofits.get(nonprofitId).getGrantSubmissions().get(submissionId))
+        GrantSubmission updatedGrantSubmission = new GrantSubmissionBuilder(grantSubmission)
                 .updateFieldsFromUserInput(updatedSubmission)
                 .build();
 
-        nonprofits.get(nonprofitId).getGrantSubmissions().set(submissionId, updatedSubmission);
-        return updated;
+        // Update the grant submission in the list
+        nonprofit.getGrantSubmissions().set(nonprofit.getGrantSubmissions().indexOf(grantSubmission), updatedGrantSubmission);
+
+        return updatedGrantSubmission;
     }
 
+    /**
+     * Get a list of all grant submissions for all nonprofits.
+     *
+     * @return List of Lists of GrantSubmission objects.
+     */
     @GET
     @Path("/submissions")
-    public List<List<GrantSubmission>> grantSubmissionlist() {
+    public List<List<GrantSubmission>> grantSubmissionList() {
         List<List<GrantSubmission>> grantSubmissions = new ArrayList<>();
 
         for (Nonprofit nonprofit : nonprofits) {
@@ -146,14 +218,28 @@ public class NonprofitResource {
         return grantSubmissions;
     }
 
-    public void checkForValid(int nonprofitId, int submissionId) {
-        // check for valid nonprofitId
-        getNonprofitById(nonprofitId);
+    /**
+     * Get a grant submission by its ID.
+     *
+     * @param id ID of the grant submission.
+     * @return GrantSubmission object.
+     */
+    private GrantSubmission getGrantSubmissionById(Nonprofit nonprofit, int id) {
+        GrantSubmission grantSubmission = nonprofit.getGrantSubmissions().stream()
+                .filter(gs -> Objects.equals(gs.getId(), id))
+                .findFirst()
+                .orElse(null);
 
-        List<GrantSubmission> grantSubmissions = nonprofits.get(nonprofitId).grantSubmissions;
-
-        if (submissionId < 0 || submissionId >= grantSubmissions.size()) {
-            throw new NotFoundException("invalid submission Id");
+        if (grantSubmission == null) {
+            throw new NotFoundException("Invalid submission Id");
         }
+
+        return grantSubmission;
+    }
+
+
+    private int generateRandomId() {
+        // id should be positive
+        return Math.abs(UUID.randomUUID().hashCode() & 1000);
     }
 }
