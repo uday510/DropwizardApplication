@@ -65,7 +65,7 @@ public class NonprofitResource {
      * @return Nonprofit object.
      */
     @POST
-    public Nonprofit createNonprofit(Nonprofit incomingNonprofit) {
+    public int createNonprofit(Nonprofit incomingNonprofit) {
         // Generate a random int ID for the nonprofit should be positive
         int id = generateRandomId();
 
@@ -83,7 +83,7 @@ public class NonprofitResource {
                 .build();
 
         nonprofits.add(createdNonprofit);
-        return createdNonprofit;
+        return createdNonprofit.getId();
     }
 
     /**
@@ -132,8 +132,11 @@ public class NonprofitResource {
      */
     @POST
     @Path("/{id}/submissions")
-    public GrantSubmission createSubmission(@PathParam("id") int id, GrantSubmission incomingGrantSubmission) {
+    public int createSubmission(@PathParam("id") int id, GrantSubmission incomingGrantSubmission) {
         Nonprofit nonprofit = getNonprofitById(id);
+
+        // print all data
+        System.out.println("Grant submission creating: " + " " + incomingGrantSubmission.getGrantName() + " " + incomingGrantSubmission.getRequestedAmount() + " " + incomingGrantSubmission.getAwardedAmount() + " " + incomingGrantSubmission.getGrantType() + " " + incomingGrantSubmission.getTags() + " " + incomingGrantSubmission.getDuration() + " " + id);
 
         // check for the same name, assuming name is unique
         for (GrantSubmission currGrantSubmission : nonprofit.getGrantSubmissions()) {
@@ -159,7 +162,9 @@ public class NonprofitResource {
         // set the grant submission
         nonprofit.getGrantSubmissions().add(updatedGrantSubmission);
 
-        return updatedGrantSubmission;
+        System.out.println("Grant submission created: " + " " + updatedGrantSubmission.getGrantName());
+
+        return updatedGrantSubmission.getId();
     }
     /**
      * Get a grant submission by nonprofit ID and submission ID.
